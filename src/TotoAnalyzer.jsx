@@ -449,6 +449,7 @@ function TotoAnalyzerApp() {
   const [wheelM, setWheelM] = useState(4); // if m of your numbers are drawn
   const [generatedWheel, setGeneratedWheel] = useState([]);
   const [wheelMeta, setWheelMeta] = useState(null);
+  const [copyMsg, setCopyMsg] = useState('');
 
   // Get active dataset (custom import overrides the embedded base)
   const activeDraws = customDataset || BASE_HISTORICAL_DRAWS;
@@ -1196,8 +1197,8 @@ function TotoAnalyzerApp() {
                       <h3 className="text-lg font-bold text-slate-200 mb-2">Pool ({betNumbers.length} numbers)</h3>
                       <p className="text-base text-slate-500 mb-3 break-words">{betNumbers.join(', ')}</p>
                       <div className="flex gap-2">
-                        <button onClick={() => setWheelMode('full')} className={`flex-1 py-1.5 text-base font-semibold rounded transition ${wheelMode === 'full' ? 'bg-emerald-600 border border-emerald-500 text-white' : 'bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700'}`}>Full System</button>
-                        <button onClick={() => setWheelMode('abbrev')} className={`flex-1 py-1.5 text-base font-semibold rounded transition ${wheelMode === 'abbrev' ? 'bg-emerald-600 border border-emerald-500 text-white' : 'bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700'}`}>Abbreviated (Covering)</button>
+                        <button onClick={() => { setWheelMode('full'); setGeneratedWheel([]); setWheelMeta(null); }} className={`flex-1 py-1.5 text-base font-semibold rounded transition ${wheelMode === 'full' ? 'bg-emerald-600 border border-emerald-500 text-white' : 'bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700'}`}>Full System</button>
+                        <button onClick={() => { setWheelMode('abbrev'); setGeneratedWheel([]); setWheelMeta(null); }} className={`flex-1 py-1.5 text-base font-semibold rounded transition ${wheelMode === 'abbrev' ? 'bg-emerald-600 border border-emerald-500 text-white' : 'bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700'}`}>Abbreviated (Covering)</button>
                       </div>
                     </div>
                   </div>
@@ -1254,7 +1255,7 @@ function TotoAnalyzerApp() {
                     </div>
                   )}
 
-                  {wheelMode === 'abbrev' && wheelMeta && !wheelMeta.error && (
+                  {wheelMode === 'abbrev' && wheelMeta && wheelMeta.guarantee && !wheelMeta.error && (
                     <p className="text-xs text-slate-500 leading-relaxed">
                       Risk/Reward: this wheel guarantees a floor (Group {wheelMeta.guarantee.t === 3 ? '7 (S$10)' : wheelMeta.guarantee.t === 4 ? '5 (S$50)' : wheelMeta.guarantee.t === 5 ? '3 (5.5% pool)' : wheelMeta.guarantee.t === 6 ? '1 (jackpot)' : wheelMeta.guarantee.t + '-match'}) only <span className="text-slate-300">if {wheelMeta.guarantee.m} of your chosen numbers are among the 6 drawn</span>. It covers the 6 MAIN numbers only — it does not cover the Additional Number (Groups 2/4/6). Expected value stays negative (54% of stake funds the prize pool); the wheel improves your <span className="text-slate-300">coverage floor</span>, not your expected return.
                     </p>
@@ -1262,7 +1263,12 @@ function TotoAnalyzerApp() {
 
                   {generatedWheel.length > 0 && (
                     <div className="border-t border-slate-800 pt-6 animate-in slide-in-from-bottom-2 duration-300">
-                      <h3 className="text-xl font-bold text-white mb-4">Generated Lines ({generatedWheel.length} combinations - ${generatedWheel.length})</h3>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-xl font-bold text-white">Generated Lines ({generatedWheel.length} combinations - ${generatedWheel.length})</h3>
+                        <button onClick={() => { const text = generatedWheel.map((line, i) => `#${i+1}: ${line.join(' ')}`).join('\n'); navigator.clipboard.writeText(text).then(() => setCopyMsg('Copied!')).catch(() => setCopyMsg('Copy failed')); setTimeout(() => setCopyMsg(''), 2000); }} className="px-3 py-1.5 text-sm font-semibold rounded-lg bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 transition shrink-0">
+                          {copyMsg || 'Copy all'}
+                        </button>
+                      </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-700">
                         {generatedWheel.map((line, idx) => (
                           <div key={idx} className="bg-slate-950 border border-slate-800/80 p-2.5 rounded-lg flex justify-between items-center shadow-sm">
