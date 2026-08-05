@@ -1018,7 +1018,7 @@ function TotoAnalyzerApp() {
               </div>
 
               <div className="bg-slate-950/50 border border-slate-800/60 p-4 sm:p-6 rounded-xl">
-                <div className="grid grid-cols-7 gap-2.5 sm:gap-3 max-w-3xl mx-auto">
+                <div className="grid grid-cols-7 gap-1.5 min-[400px]:gap-2 sm:gap-3 max-w-3xl mx-auto">
                   {Array.from({ length: 49 }, (_, i) => i + 1).map((num) => {
                     const isSelected = betNumbers.includes(num);
                     return (
