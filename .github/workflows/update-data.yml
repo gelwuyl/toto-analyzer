@@ -1,10 +1,10 @@
 name: Refresh TOTO data
 
-# Keeps the hosted database growing. Runs 3x/day off the hour, plus manual.
-# Commits any new draws -> triggers the deploy workflow.
+# Keeps the hosted database growing. Runs every Monday and Thursday at
+# 10pm Singapore time (14:00 UTC). Commits any new draws -> triggers deploy.
 on:
   schedule:
-    - cron: '17 3,11,19 * * *'
+    - cron: '0 14 * * 1,4'
   workflow_dispatch:
 
 permissions:
