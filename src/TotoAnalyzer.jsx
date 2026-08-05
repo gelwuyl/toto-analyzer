@@ -909,7 +909,7 @@ function TotoAnalyzerApp() {
           <button onClick={() => setActiveTab('overview')} className={`px-5 py-3 font-semibold text-sm rounded-t-xl transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${activeTab === 'overview' ? 'border-blue-500 text-blue-400 bg-slate-900/80' : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'}`}>
             📊 Analytics & Stats
           </button>
-          <button onClick={() => setActiveTab('history')} className={`px-5 py-3 font-semibold text-sm rounded-t-xl transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${activeTab === 'overview' ? 'border-blue-500 text-blue-400 bg-slate-900/80' : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'}`}>
+          <button onClick={() => setActiveTab('history')} className={`px-5 py-3 font-semibold text-sm rounded-t-xl transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${activeTab === 'history' ? 'border-blue-500 text-blue-400 bg-slate-900/80' : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'}`}>
             📜 Past Records {datasetStats.total > 0 && <span className="bg-blue-600/30 text-blue-300 text-xs px-2 py-0.5 rounded-full border border-blue-500/30">{datasetStats.total}</span>}
           </button>
           <button onClick={() => setActiveTab('planner')} className={`px-5 py-3 font-semibold text-sm rounded-t-xl transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${activeTab === 'planner' ? 'border-blue-500 text-blue-400 bg-slate-900/80' : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'}`}>
