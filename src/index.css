@@ -1,3 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Global font scale: bump base rem by ~1 step (16px -> 18px) so every
+   Tailwind text-/size utility steps up uniformly across the whole app. */
+html {
+  font-size: 112.5%;
+}
