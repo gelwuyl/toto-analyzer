@@ -960,7 +960,7 @@ function TotoAnalyzerApp() {
                       {pair.matches.length > 0 && (
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-slate-400">Matched:</span>
-                          <div className="flex gap-1">{pair.matches.map(m => <span key={m} className="bg-amber-400 text-slate-950 font-bold text-xs w-6 h-6 rounded-full flex items-center justify-center shadow">{m}</span>)}</div>
+                          <div className="flex gap-1">{pair.matches.map(m => <span key={m} className="bg-amber-400 text-slate-950 font-bold text-base w-9 h-9 rounded-full flex items-center justify-center shadow">{m}</span>)}</div>
                         </div>
                       )}
                     </div>
@@ -969,22 +969,22 @@ function TotoAnalyzerApp() {
                       <div className="bg-slate-950/60 p-3.5 rounded-lg border border-slate-800/60">
                         <div className="flex justify-between items-center mb-2">
                           <span className="text-xs font-semibold text-slate-400">Prior Draw #{pair.prior.drawNo}</span>
-                          <span className="text-[10px] text-slate-500">{pair.prior.date}</span>
+                          <span className="text-xs text-slate-500">{pair.prior.date}</span>
                         </div>
                         <div className="flex flex-wrap items-center gap-1.5">
-                          {pair.prior.numbers.map(n => <span key={n} className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border transition ${pair.matches.includes(n) ? 'bg-amber-400 text-slate-950 border-amber-300 ring-2 ring-amber-400/30 shadow-lg scale-105' : getBallStyle(n)}`}>{n}</span>)}
-                          {includeBonus && <div className="flex items-center ml-1 border-l border-slate-800 pl-2"><span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border ${pair.matches.includes(pair.prior.additional) ? 'bg-amber-400 text-slate-950 border-amber-300 ring-2 ring-amber-400/30 shadow-lg' : 'bg-slate-800 text-slate-300 border-amber-500/50'}`}>{pair.prior.additional}</span></div>}
+                          {pair.prior.numbers.map(n => <span key={n} className={`w-11 h-11 rounded-full flex items-center justify-center text-base font-bold border transition ${pair.matches.includes(n) ? 'bg-amber-400 text-slate-950 border-amber-300 ring-2 ring-amber-400/30 shadow-lg scale-105' : getBallStyle(n)}`}>{n}</span>)}
+                          {includeBonus && <div className="flex items-center ml-1 border-l border-slate-800 pl-2"><span className={`w-11 h-11 rounded-full flex items-center justify-center text-base font-bold border ${pair.matches.includes(pair.prior.additional) ? 'bg-amber-400 text-slate-950 border-amber-300 ring-2 ring-amber-400/30 shadow-lg' : 'bg-slate-800 text-slate-300 border-amber-500/50'}`}>{pair.prior.additional}</span></div>}
                         </div>
                       </div>
                       {/* Subsequent Draw */}
                       <div className="bg-slate-950/60 p-3.5 rounded-lg border border-slate-800/60">
                         <div className="flex justify-between items-center mb-2">
                           <span className="text-xs font-semibold text-slate-400">Subsequent Draw #{pair.current.drawNo}</span>
-                          <span className="text-[10px] text-slate-500">{pair.current.date}</span>
+                          <span className="text-xs text-slate-500">{pair.current.date}</span>
                         </div>
                         <div className="flex flex-wrap items-center gap-1.5">
-                          {pair.current.numbers.map(n => <span key={n} className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border transition ${pair.matches.includes(n) ? 'bg-amber-400 text-slate-950 border-amber-300 ring-2 ring-amber-400/30 shadow-lg scale-105' : getBallStyle(n)}`}>{n}</span>)}
-                          {includeBonus && <div className="flex items-center ml-1 border-l border-slate-800 pl-2"><span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border ${pair.matches.includes(pair.current.additional) ? 'bg-amber-400 text-slate-950 border-amber-300 ring-2 ring-amber-400/30 shadow-lg' : 'bg-slate-800 text-slate-300 border-amber-500/50'}`}>{pair.current.additional}</span></div>}
+                          {pair.current.numbers.map(n => <span key={n} className={`w-11 h-11 rounded-full flex items-center justify-center text-base font-bold border transition ${pair.matches.includes(n) ? 'bg-amber-400 text-slate-950 border-amber-300 ring-2 ring-amber-400/30 shadow-lg scale-105' : getBallStyle(n)}`}>{n}</span>)}
+                          {includeBonus && <div className="flex items-center ml-1 border-l border-slate-800 pl-2"><span className={`w-11 h-11 rounded-full flex items-center justify-center text-base font-bold border ${pair.matches.includes(pair.current.additional) ? 'bg-amber-400 text-slate-950 border-amber-300 ring-2 ring-amber-400/30 shadow-lg' : 'bg-slate-800 text-slate-300 border-amber-500/50'}`}>{pair.current.additional}</span></div>}
                         </div>
                       </div>
                     </div>
@@ -1018,11 +1018,11 @@ function TotoAnalyzerApp() {
               </div>
 
               <div className="bg-slate-950/50 border border-slate-800/60 p-4 sm:p-6 rounded-xl">
-                <div className="grid grid-cols-7 gap-2 sm:gap-3 max-w-2xl mx-auto">
+                <div className="grid grid-cols-7 gap-2.5 sm:gap-3 max-w-3xl mx-auto">
                   {Array.from({ length: 49 }, (_, i) => i + 1).map((num) => {
                     const isSelected = betNumbers.includes(num);
                     return (
-                      <button key={num} onClick={() => toggleBetNumber(num)} className={`aspect-square rounded-full flex items-center justify-center text-sm sm:text-base font-bold transition-all border-2 ${isSelected ? 'bg-blue-600 text-white border-blue-400 ring-4 ring-blue-500/30 scale-110 shadow-lg shadow-blue-900/50 z-10' : 'bg-slate-800/50 text-slate-300 border-slate-700 hover:bg-slate-700 hover:border-slate-500'}`}>
+                      <button key={num} onClick={() => toggleBetNumber(num)} className={`aspect-square rounded-full flex items-center justify-center text-lg sm:text-xl font-bold transition-all border-2 ${isSelected ? 'bg-blue-600 text-white border-blue-400 ring-4 ring-blue-500/30 scale-110 shadow-lg shadow-blue-900/50 z-10' : 'bg-slate-800/50 text-slate-300 border-slate-700 hover:bg-slate-700 hover:border-slate-500'}`}>
                         {num}
                       </button>
                     );
