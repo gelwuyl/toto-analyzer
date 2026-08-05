@@ -444,8 +444,11 @@ function TotoAnalyzerApp() {
 
   // Planner + Wheeling State (shared selector)
   const [betNumbers, setBetNumbers] = useState([]);
-  const [wheelMode, setWheelMode] = useState('full');
+  const [wheelMode, setWheelMode] = useState('full'); // 'full' = System entry, 'abbrev' = covering wheel
+  const [wheelT, setWheelT] = useState(3); // guarantee at least t matches
+  const [wheelM, setWheelM] = useState(4); // if m of your numbers are drawn
   const [generatedWheel, setGeneratedWheel] = useState([]);
+  const [wheelMeta, setWheelMeta] = useState(null);
 
   // Get active dataset (custom import overrides the embedded base)
   const activeDraws = customDataset || BASE_HISTORICAL_DRAWS;
@@ -509,7 +512,7 @@ function TotoAnalyzerApp() {
   const toggleBetNumber = (num) => {
     if (betNumbers.includes(num)) {
       setBetNumbers(betNumbers.filter(n => n !== num));
-    } else if (betNumbers.length < 15) {
+    } else if (betNumbers.length < 12) {
       setBetNumbers([...betNumbers, num].sort((a, b) => a - b));
     }
   };
@@ -586,14 +589,78 @@ function TotoAnalyzerApp() {
 
   const generateWheel = () => {
     if (betNumbers.length < 6) return;
-    const allCombos = getCombinations(betNumbers, 6);
+    const pool = betNumbers;
+    const n = pool.length;
     if (wheelMode === 'full') {
+      const allCombos = getCombinations(pool, 6);
       setGeneratedWheel(allCombos);
-    } else if (wheelMode === 'budget') {
-      const maxLines = Math.min(Math.ceil(allCombos.length * 0.1), 50);
-      const shuffled = [...allCombos].sort(() => 0.5 - Math.random());
-      setGeneratedWheel(shuffled.slice(0, maxLines));
+      setWheelMeta({
+        mode: 'full',
+        lines: allCombos.length,
+        cost: allCombos.length,
+        guarantee: null,
+        verified: null,
+        fullSystemLines: allCombos.length,
+      });
+      return;
     }
+    // Abbreviated = true covering wheel: guarantee t matches if m of pool are drawn.
+    const t = wheelT, m = wheelM;
+    if (t > m || t > 6 || t < 1 || m < t || m > n) {
+      setGeneratedWheel([]);
+      setWheelMeta({ mode: 'abbrev', lines: 0, cost: 0, guarantee: null, verified: false, fullSystemLines: getCombinations(pool, 6).length, error: 'Invalid guarantee (need 1<=t<=m<=pool size, t<=6).' });
+      return;
+    }
+    const popcount = (x) => { let c = 0; while (x) { c += x & 1; x >>= 1; } return c; };
+    const idx = {}; pool.forEach((v, i) => { idx[v] = i; });
+    const poolMask = (1 << n) - 1;
+    // all 6-lines as bitmasks
+    const lines = [];
+    const pick = (start, k, mask) => {
+      if (k === 0) { lines.push(mask); return; }
+      for (let i = start; i < n; i++) pick(i + 1, k - 1, mask | (1 << i));
+    };
+    pick(0, 6, 0);
+    // all m-subsets as bitmasks
+    const subs = [];
+    const pickS = (start, k, mask) => {
+      if (k === 0) { subs.push(mask); return; }
+      for (let i = start; i < n; i++) pickS(i + 1, k - 1, mask | (1 << i));
+    };
+    pickS(0, m, 0);
+    // greedy: cover every m-subset with >=t overlap to some chosen line
+    const uncovered = new Set(subs);
+    const chosen = [];
+    const MAX_LINES = 300;
+    while (uncovered.size > 0 && chosen.length < MAX_LINES) {
+      let best = -1, bestCov = -1;
+      for (const lineMask of lines) {
+        if (chosen.includes(lineMask)) continue;
+        let cov = 0;
+        for (const s of uncovered) {
+          if (popcount(s & lineMask) >= t) cov++;
+        }
+        if (cov > bestCov) { bestCov = cov; best = lineMask; }
+      }
+      if (best < 0 || bestCov === 0) break;
+      chosen.push(best);
+      for (const s of uncovered) { if (popcount(s & best) >= t) uncovered.delete(s); }
+    }
+    // verify
+    const verified = subs.every(s => chosen.some(l => popcount(s & l) >= t));
+    const toNums = (mask) => pool.filter((_, i) => (mask >> i) & 1);
+    const wheelLines = chosen.map(toNums);
+    const fullLines = getCombinations(pool, 6).length;
+    setGeneratedWheel(wheelLines);
+    setWheelMeta({
+      mode: 'abbrev',
+      lines: wheelLines.length,
+      cost: wheelLines.length,
+      guarantee: { t, m },
+      verified,
+      fullSystemLines: fullLines,
+      error: null,
+    });
   };
 
   const frequencyStats = useMemo(() => {
@@ -1011,7 +1078,12 @@ function TotoAnalyzerApp() {
                     {getEntryType(betNumbers.length)}
                   </div>
                   <div className="flex items-center gap-4 mt-2">
-                    <span className="text-xs text-slate-500">{betNumbers.length} / 15 max selected</span>
+                    <span className="text-xs text-slate-500">{betNumbers.length} / 12 max selected</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[7,8,9,10,11,12].map(sys => (
+                        <button key={sys} onClick={() => setBetNumbers(Array.from({length:sys},(_,i)=>i+1))} className="px-2 py-1 text-xs rounded border border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-slate-200 transition">System {sys}</button>
+                      ))}
+                    </div>
                     {betNumbers.length > 0 && <button onClick={clearBetNumbers} className="text-xs text-rose-400 hover:text-rose-300 transition underline">Clear All</button>}
                   </div>
                 </div>
@@ -1112,7 +1184,7 @@ function TotoAnalyzerApp() {
                 <h2 className="text-3xl font-bold text-white">🎡 Wheeling System Generator</h2>
                 <p className="text-lg text-slate-400 mt-1">
                   {betNumbers.length >= 6
-                    ? `Building combinations from the ${betNumbers.length} numbers you selected above. Full system covers every 6-number line; Abbreviated samples the most cost-effective subset.`
+                    ? `Building combinations from the ${betNumbers.length} numbers you selected above. Full System plays every 6-line; Abbreviated is a true covering wheel that guarantees a minimum win tier.`
                     : 'Select at least 6 numbers above using the shared selector to generate wheeling combinations.'}
                 </p>
               </div>
@@ -1125,13 +1197,69 @@ function TotoAnalyzerApp() {
                       <p className="text-base text-slate-500 mb-3 break-words">{betNumbers.join(', ')}</p>
                       <div className="flex gap-2">
                         <button onClick={() => setWheelMode('full')} className={`flex-1 py-1.5 text-base font-semibold rounded transition ${wheelMode === 'full' ? 'bg-emerald-600 border border-emerald-500 text-white' : 'bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700'}`}>Full System</button>
-                        <button onClick={() => setWheelMode('budget')} className={`flex-1 py-1.5 text-base font-semibold rounded transition ${wheelMode === 'budget' ? 'bg-emerald-600 border border-emerald-500 text-white' : 'bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700'}`}>Abbreviated</button>
+                        <button onClick={() => setWheelMode('abbrev')} className={`flex-1 py-1.5 text-base font-semibold rounded transition ${wheelMode === 'abbrev' ? 'bg-emerald-600 border border-emerald-500 text-white' : 'bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700'}`}>Abbreviated (Covering)</button>
                       </div>
                     </div>
                   </div>
+
+                  {wheelMode === 'abbrev' && (
+                    <div className="bg-slate-950/70 p-4 rounded-xl border border-slate-800 space-y-3">
+                      <p className="text-sm text-slate-400">Set the guarantee: <span className="text-slate-200 font-semibold">if {wheelM} of your {betNumbers.length} numbers are drawn, you are guaranteed at least {wheelT} matching</span> in some line.</p>
+                      <div className="flex flex-wrap items-center gap-4">
+                        <label className="flex items-center gap-2 text-sm text-slate-400">
+                          Guarantee matches (t):
+                          <select value={wheelT} onChange={(e) => { setWheelT(Number(e.target.value)); setGeneratedWheel([]); setWheelMeta(null); }} className="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-100">
+                            {[1,2,3,4,5,6].filter(v => v <= wheelM).map(v => <option key={v} value={v}>{v}</option>)}
+                          </select>
+                        </label>
+                        <label className="flex items-center gap-2 text-sm text-slate-400">
+                          If drawn (m):
+                          <select value={wheelM} onChange={(e) => { setWheelM(Number(e.target.value)); setGeneratedWheel([]); setWheelMeta(null); }} className="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-100">
+                            {Array.from({length: betNumbers.length - 2}, (_, i) => i + 3).filter(v => v >= 3 && v <= betNumbers.length).map(v => <option key={v} value={v}>{v}</option>)}
+                          </select>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+
                   <button onClick={generateWheel} className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-lg font-bold transition shadow-lg shadow-emerald-600/30">
                     Generate Lines
                   </button>
+
+                  {wheelMeta && wheelMeta.error && (
+                    <div className="bg-rose-950/40 border border-rose-800/50 rounded-lg p-3 text-sm text-rose-300">{wheelMeta.error}</div>
+                  )}
+
+                  {wheelMeta && !wheelMeta.error && (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="bg-slate-950/60 border border-slate-800 rounded-lg p-3">
+                        <div className="text-xs text-slate-500 uppercase tracking-wider">Lines / Cost</div>
+                        <div className="text-2xl font-extrabold text-white mt-1">{wheelMeta.lines} <span className="text-sm font-normal text-slate-400">@ S$1 = S${wheelMeta.cost}</span></div>
+                      </div>
+                      <div className="bg-slate-950/60 border border-slate-800 rounded-lg p-3">
+                        <div className="text-xs text-slate-500 uppercase tracking-wider">{wheelMode === 'abbrev' ? 'Full System (vs)' : 'This is'}</div>
+                        <div className="text-2xl font-extrabold text-slate-300 mt-1">{wheelMeta.fullSystemLines} <span className="text-sm font-normal text-slate-500">lines</span></div>
+                        {wheelMode === 'abbrev' && <div className="text-xs text-emerald-400 mt-1">You save S${wheelMeta.fullSystemLines - wheelMeta.lines}</div>}
+                      </div>
+                      <div className="bg-slate-950/60 border border-slate-800 rounded-lg p-3">
+                        <div className="text-xs text-slate-500 uppercase tracking-wider">Guarantee</div>
+                        {wheelMeta.guarantee ? (
+                          <div className="text-base font-bold text-amber-300 mt-1">≥{wheelMeta.guarantee.t} if {wheelMeta.guarantee.m} hit</div>
+                        ) : (
+                          <div className="text-base font-bold text-slate-300 mt-1">All {wheelMeta.lines} lines</div>
+                        )}
+                        {wheelMeta.verified === true && <div className="text-xs text-emerald-400 mt-1">✓ verified ({wheelMeta.fullSystemLines >= 0 ? 'covering holds' : ''})</div>}
+                        {wheelMeta.verified === false && <div className="text-xs text-rose-400 mt-1">✗ not fully covered</div>}
+                      </div>
+                    </div>
+                  )}
+
+                  {wheelMode === 'abbrev' && wheelMeta && !wheelMeta.error && (
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      Risk/Reward: this wheel guarantees a floor (Group {wheelMeta.guarantee.t === 3 ? '7 (S$10)' : wheelMeta.guarantee.t === 4 ? '5 (S$50)' : wheelMeta.guarantee.t === 5 ? '3 (5.5% pool)' : wheelMeta.guarantee.t === 6 ? '1 (jackpot)' : wheelMeta.guarantee.t + '-match'}) only <span className="text-slate-300">if {wheelMeta.guarantee.m} of your chosen numbers are among the 6 drawn</span>. It covers the 6 MAIN numbers only — it does not cover the Additional Number (Groups 2/4/6). Expected value stays negative (54% of stake funds the prize pool); the wheel improves your <span className="text-slate-300">coverage floor</span>, not your expected return.
+                    </p>
+                  )}
+
                   {generatedWheel.length > 0 && (
                     <div className="border-t border-slate-800 pt-6 animate-in slide-in-from-bottom-2 duration-300">
                       <h3 className="text-xl font-bold text-white mb-4">Generated Lines ({generatedWheel.length} combinations - ${generatedWheel.length})</h3>
