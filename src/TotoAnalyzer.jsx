@@ -907,16 +907,13 @@ function TotoAnalyzerApp() {
         {/* Tab Navigation */}
         <div className="flex border-b border-slate-800 gap-2 overflow-x-auto pb-1 scrollbar-none">
           <button onClick={() => setActiveTab('overview')} className={`px-5 py-3 font-semibold text-sm rounded-t-xl transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${activeTab === 'overview' ? 'border-blue-500 text-blue-400 bg-slate-900/80' : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'}`}>
-            📊 Analytics & Distribution
+            📊 Analytics & Stats
           </button>
           <button onClick={() => setActiveTab('history')} className={`px-5 py-3 font-semibold text-sm rounded-t-xl transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${activeTab === 'overview' ? 'border-blue-500 text-blue-400 bg-slate-900/80' : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'}`}>
             📜 Past Records {datasetStats.total > 0 && <span className="bg-blue-600/30 text-blue-300 text-xs px-2 py-0.5 rounded-full border border-blue-500/30">{datasetStats.total}</span>}
           </button>
           <button onClick={() => setActiveTab('planner')} className={`px-5 py-3 font-semibold text-sm rounded-t-xl transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${activeTab === 'planner' ? 'border-blue-500 text-blue-400 bg-slate-900/80' : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'}`}>
             🎯 Next Bet & ROI
-          </button>
-          <button onClick={() => setActiveTab('stats')} className={`px-5 py-3 font-semibold text-sm rounded-t-xl transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${activeTab === 'stats' ? 'border-fuchsia-500 text-fuchsia-400 bg-slate-900/80' : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'}`}>
-            📈 Stats & Matrices
           </button>
           <button onClick={() => setActiveTab('data')} className={`px-5 py-3 font-semibold text-sm rounded-t-xl transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${activeTab === 'data' ? 'border-amber-500 text-amber-400 bg-slate-900/80' : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'}`}>
             📂 Data & Sync
@@ -1291,8 +1288,8 @@ function TotoAnalyzerApp() {
           </div>
         )}
 
-        {/* TAB 4: Stats & Matrices */}
-        {activeTab === 'stats' && (
+        {/* TAB 4 (moved): Stats & Matrices */}
+        {activeTab === 'overview' && (
           <div className="space-y-8 animate-in fade-in duration-300">
             {/* Frequency Heatmap Section */}
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl">
