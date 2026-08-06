@@ -412,6 +412,7 @@ function TotoAnalyzerApp() {
   const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'history', 'planner', 'stats', 'data'
   const [includeBonus, setIncludeBonus] = useState(true); 
   const [selectedMatchFilter, setSelectedMatchFilter] = useState(null); 
+  const [recentFilter, setRecentFilter] = useState(1); // 1 = >=1 match, 2 = >=2, 3 = >=3
   const [searchQuery, setSearchQuery] = useState('');
   
   // Data State
@@ -518,6 +519,16 @@ function TotoAnalyzerApp() {
     }
   };
 
+  // Pick n distinct random numbers from 1..49 (Fisher-Yates), sorted.
+  const randomBetNumbers = (n) => {
+    const pool = [...Array(49)].map((_, i) => i + 1);
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    return pool.slice(0, n).sort((a, b) => a - b);
+  };
+
   const clearBetNumbers = () => {
     setBetNumbers([]);
     setGeneratedWheel([]);
@@ -538,11 +549,12 @@ function TotoAnalyzerApp() {
       return { draw, matches, count: matches.length };
     });
     const recent10 = analysis.slice(0, 10);
+    const recentFiltered = analysis.filter(a => a.count >= 1).slice(0, 10);
     const distribution = {};
     analysis.forEach(a => {
       distribution[a.count] = (distribution[a.count] || 0) + 1;
     });
-    return { recent10, distribution, total: analysis.length };
+    return { recent10, recentFiltered, distribution, total: analysis.length };
   }, [activeDraws, betNumbers, includeBonus]);
 
   const getCombinations = (arr, k) => {
@@ -1078,8 +1090,9 @@ function TotoAnalyzerApp() {
                   <div className="flex items-center gap-4 mt-2">
                     <span className="text-xs text-slate-500">{betNumbers.length} / 12 max selected</span>
                     <div className="flex flex-wrap gap-1.5">
+                      <button onClick={() => setBetNumbers(randomBetNumbers(6))} className="px-2 py-1 text-xs rounded border border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-slate-200 transition">Ordinary</button>
                       {[7,8,9,10,11,12].map(sys => (
-                        <button key={sys} onClick={() => setBetNumbers(Array.from({length:sys},(_,i)=>i+1))} className="px-2 py-1 text-xs rounded border border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-slate-200 transition">System {sys}</button>
+                        <button key={sys} onClick={() => setBetNumbers(randomBetNumbers(sys))} className="px-2 py-1 text-xs rounded border border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-slate-200 transition">System {sys}</button>
                       ))}
                     </div>
                     {betNumbers.length > 0 && <button onClick={clearBetNumbers} className="text-xs text-rose-400 hover:text-rose-300 transition underline">Clear All</button>}
@@ -1136,9 +1149,16 @@ function TotoAnalyzerApp() {
             {plannerAnalysis && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl">
-                  <h3 className="text-2xl font-bold text-white mb-4 border-b border-slate-800 pb-3 flex items-center gap-2">🕒 Most Recent 10 Draws Overlap</h3>
+                  <h3 className="text-2xl font-bold text-white mb-4 border-b border-slate-800 pb-3 flex items-center gap-2">🕒 Most Recent Draws Overlap (≥1 match)</h3>
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    {[1,2,3].map(f => (
+                      <button key={f} onClick={() => setRecentFilter(f)} className={`px-2.5 py-1 text-xs rounded border transition ${recentFilter === f ? 'bg-blue-600 border-blue-500 text-white font-semibold' : 'border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-slate-200'}`}>{f === 1 ? 'All (≥1)' : `≥${f} matches`}</button>
+                    ))}
+                  </div>
                   <div className="space-y-3">
-                    {plannerAnalysis.recent10.map(({ draw, matches, count }) => (
+                    {plannerAnalysis.recentFiltered.length === 0 ? (
+                      <div className="text-sm text-slate-500 py-6 text-center">No recent draws with {recentFilter === 1 ? 'a match' : `${recentFilter}+ matches`} for your current selection.</div>
+                    ) : plannerAnalysis.recentFiltered.map(({ draw, matches, count }) => (
                       <div key={draw.drawNo} className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg border transition ${count >= 3 ? 'bg-amber-950/20 border-amber-900/50' : 'bg-slate-950/50 border-slate-800/50'}`}>
                         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                           <div className="flex flex-col">
