@@ -1149,7 +1149,7 @@ function TotoAnalyzerApp() {
             {plannerAnalysis && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl">
-                  <h3 className="text-2xl font-bold text-white mb-4 border-b border-slate-800 pb-3 flex items-center gap-2">🕒 Most Recent Draws Overlap (≥1 match)</h3>
+                  <h3 className="text-2xl font-bold text-white mb-4 border-b border-slate-800 pb-3 flex items-center gap-2">🕒 Most Recent 10 Draws Overlap</h3>
                   <div className="flex flex-wrap gap-1.5 mb-4">
                     {[1,2,3].map(f => (
                       <button key={f} onClick={() => setRecentFilter(f)} className={`px-2.5 py-1 text-xs rounded border transition ${recentFilter === f ? 'bg-blue-600 border-blue-500 text-white font-semibold' : 'border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-slate-200'}`}>{f === 1 ? 'All (≥1)' : `≥${f} matches`}</button>
