@@ -549,13 +549,13 @@ function TotoAnalyzerApp() {
       return { draw, matches, count: matches.length };
     });
     const recent10 = analysis.slice(0, 10);
-    const recentFiltered = analysis.filter(a => a.count >= 1).slice(0, 10);
+    const recentFiltered = analysis.filter(a => a.count >= recentFilter).slice(0, 10);
     const distribution = {};
     analysis.forEach(a => {
       distribution[a.count] = (distribution[a.count] || 0) + 1;
     });
     return { recent10, recentFiltered, distribution, total: analysis.length };
-  }, [activeDraws, betNumbers, includeBonus]);
+  }, [activeDraws, betNumbers, includeBonus, recentFilter]);
 
   const getCombinations = (arr, k) => {
     const results = [];
