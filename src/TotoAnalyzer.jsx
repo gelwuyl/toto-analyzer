@@ -985,7 +985,7 @@ function TotoAnalyzerApp() {
                           </button>
                         </div>
                         <div className="flex flex-col items-end text-xs gap-0.5">
-                          <span className="text-blue-400 font-semibold">Actual: {percentage.toFixed(2)}%</span>
+                          <span className="text-slate-400 font-mono">Actual: {percentage.toFixed(2)}%</span>
                           <span className="text-slate-400 font-mono">Theoretical: {theoryPct}%</span>
                         </div>
                       </div>
