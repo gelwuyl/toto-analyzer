@@ -984,7 +984,7 @@ function TotoAnalyzerApp() {
                             <span className="text-xs text-slate-500 font-normal">({count} times)</span>
                           </button>
                         </div>
-                        <div className="flex items-center gap-4 text-xs">
+                        <div className="flex flex-col items-end text-xs gap-0.5">
                           <span className="text-blue-400 font-semibold">Actual: {percentage.toFixed(2)}%</span>
                           <span className="text-slate-400 font-mono">Theoretical: {theoryPct}%</span>
                         </div>
@@ -1185,9 +1185,14 @@ function TotoAnalyzerApp() {
                         const count = plannerAnalysis.distribution[matchLvl];
                         const pct = ((count / plannerAnalysis.total) * 100).toFixed(1);
                         return (
-                          <div key={matchLvl} className={`flex items-center justify-between p-2 rounded hover:bg-slate-800/50 transition ${matchLvl >= 4 ? 'bg-rose-950/20 border border-rose-900/30' : ''}`}>
-                            <span className={`text-sm font-semibold ${matchLvl >= 4 ? 'text-rose-400' : matchLvl === 3 ? 'text-amber-400' : 'text-slate-300'}`}>{matchLvl} Match{matchLvl !== 1 && 'es'}</span>
-                            <div className="text-right flex flex-col"><span className="text-sm font-bold text-slate-100">{count}x</span><span className="text-[10px] text-slate-500">{pct}%</span></div>
+                          <div key={matchLvl} className={`p-2 rounded hover:bg-slate-800/50 transition ${matchLvl >= 4 ? 'bg-rose-950/20 border border-rose-900/30' : ''}`}>
+                            <div className="flex items-center justify-between">
+                              <span className={`text-sm font-semibold ${matchLvl >= 4 ? 'text-rose-400' : matchLvl === 3 ? 'text-amber-400' : 'text-slate-300'}`}>{matchLvl} Match{matchLvl !== 1 && 'es'}</span>
+                              <div className="text-right flex flex-col"><span className="text-sm font-bold text-slate-100">{count}x</span><span className="text-xs text-slate-400">{pct}%</span></div>
+                            </div>
+                            <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1.5">
+                              <div className={`h-full rounded-full ${matchLvl >= 4 ? 'bg-rose-500/70' : matchLvl === 3 ? 'bg-amber-500/70' : 'bg-blue-500/70'}`} style={{ width: `${Math.min(Number(pct), 100)}%` }}></div>
+                            </div>
                           </div>
                         );
                     })}
