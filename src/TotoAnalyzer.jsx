@@ -973,16 +973,17 @@ function TotoAnalyzerApp() {
               </div>
               <div className="space-y-4">
                 {datasetStats.distribution.map(({ matches, count, percentage }) => {
+                  if (matches === 6) return null; // 6-match between consecutive draws is not applicable
                   const theory = (includeBonus ? THEORETICAL_7 : THEORETICAL_6).find(t => t.matches === matches);
                   const theoryPct = theory ? theory.prob : 0;
                   return (
-                    <div key={matches} className="space-y-1.5 bg-slate-950/40 p-3.5 rounded-xl border border-slate-800/60">
+                    <div key={matches} onClick={() => handleSelectMatchFilter(matches)} className="space-y-1.5 bg-slate-950/40 p-3.5 rounded-xl border border-slate-800/60 hover:border-blue-500/50 hover:bg-slate-900/60 cursor-pointer transition">
                       <div className="flex justify-between items-center text-sm">
                         <div className="flex items-center gap-3">
-                          <button onClick={() => handleSelectMatchFilter(matches)} className="font-bold text-slate-200 hover:text-blue-400 transition flex items-center gap-1.5">
+                          <span className="font-bold text-slate-200 flex items-center gap-1.5">
                             <span>{matches} Matching Ball{matches !== 1 && 's'}</span>
                             <span className="text-xs text-slate-500 font-normal">({count} times)</span>
-                          </button>
+                          </span>
                         </div>
                         <div className="flex flex-col items-end text-xs gap-0.5">
                           <span className="text-blue-400 font-mono">Actual: {percentage.toFixed(2)}%</span>
@@ -1012,7 +1013,7 @@ function TotoAnalyzerApp() {
               <div className="flex items-center gap-1.5 flex-wrap w-full md:w-auto">
                 <span className="text-xs text-slate-400 mr-2 font-semibold uppercase">Filter Overlap:</span>
                 <button onClick={() => setSelectedMatchFilter(null)} className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${selectedMatchFilter === null ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'bg-slate-800 text-slate-400 hover:text-slate-200'}`}>All ({datasetStats.total})</button>
-                {[0, 1, 2, 3, 4, 5, 6].map(num => (
+                {[0, 1, 2, 3, 4, 5].map(num => (
                   <button key={num} onClick={() => setSelectedMatchFilter(num)} className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${selectedMatchFilter === num ? num === 3 ? 'bg-amber-500 text-slate-950 font-bold shadow-lg shadow-amber-500/30' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'bg-slate-800 text-slate-400 hover:text-slate-200'}`}>
                     {num} Match{num !== 1 && 'es'} ({datasetStats.counts[num] || 0})
                   </button>
