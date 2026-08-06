@@ -964,7 +964,7 @@ function TotoAnalyzerApp() {
               </div>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl space-y-6">
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 sm:p-6 shadow-xl space-y-6">
               <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-slate-800 pb-4">
                 <div>
                   <h2 className="text-2xl font-bold text-white">Empirical Dataset vs Hypergeometric Theory</h2>
@@ -977,25 +977,19 @@ function TotoAnalyzerApp() {
                   const theory = (includeBonus ? THEORETICAL_7 : THEORETICAL_6).find(t => t.matches === matches);
                   const theoryPct = theory ? theory.prob : 0;
                   return (
-                    <div key={matches} onClick={() => handleSelectMatchFilter(matches)} className="space-y-1.5 bg-slate-950/40 p-3.5 rounded-xl border border-slate-800/60 hover:border-blue-500/50 hover:bg-slate-900/60 cursor-pointer transition">
-                      <div className="flex justify-between items-center text-sm">
-                        <div className="flex items-center gap-3">
-                          <span className="font-bold text-slate-200 flex items-center gap-1.5">
-                            <span>{matches} Matching Ball{matches !== 1 && 's'}</span>
-                            <span className="text-xs text-slate-500 font-normal">({count} times)</span>
-                          </span>
-                        </div>
-                        <div className="flex flex-col items-end text-xs gap-0.5">
-                          <span className="text-blue-400 font-mono">Actual: {percentage.toFixed(2)}%</span>
-                          <span className="text-amber-400 font-mono">Theoretical: {theoryPct}%</span>
-                        </div>
+                    <div key={matches} onClick={() => handleSelectMatchFilter(matches)} className="space-y-2 bg-slate-950/40 p-3 rounded-xl border border-slate-800/60 hover:border-blue-500/50 hover:bg-slate-900/60 cursor-pointer transition">
+                      <div className="flex justify-between items-center text-sm gap-2">
+                        <span className="font-bold text-slate-200 truncate">{matches} Matching Ball{matches !== 1 && 's'}</span>
+                        <span className="text-xs text-slate-400 font-normal whitespace-nowrap">({count} times)</span>
                       </div>
-                      <div className="space-y-1">
-                        <div className="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden flex">
+                      <div className="space-y-1.5">
+                        <div className="relative w-full bg-slate-800 h-6 rounded-full overflow-hidden flex">
                           <div className="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(percentage, 100)}%` }}></div>
+                          <span className="absolute inset-y-0 right-2 flex items-center text-[11px] font-mono text-blue-200/90 font-semibold">Actual: {percentage.toFixed(2)}%</span>
                         </div>
-                        <div className="w-full bg-slate-800/50 h-1 rounded-full overflow-hidden">
-                          <div className="bg-amber-500/60 h-full rounded-full" style={{ width: `${Math.min(theoryPct, 100)}%` }}></div>
+                        <div className="relative w-full bg-slate-800/60 h-5 rounded-full overflow-hidden flex">
+                          <div className="bg-amber-500/70 h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(theoryPct, 100)}%` }}></div>
+                          <span className="absolute inset-y-0 right-2 flex items-center text-[11px] font-mono text-amber-100/90 font-semibold">Theoretical: {theoryPct}%</span>
                         </div>
                       </div>
                     </div>
