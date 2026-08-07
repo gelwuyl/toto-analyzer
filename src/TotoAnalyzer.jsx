@@ -2380,37 +2380,17 @@ function TotoAnalyzerApp() {
 
                   {wheelMode === 'abbrev' && (
 
-                    <div className="bg-slate-950/70 p-4 rounded-xl border border-slate-800 space-y-3">
+                    <div className="bg-slate-950/70 p-4 rounded-xl border border-slate-800">
 
-                      <p className="text-sm text-slate-400">Set the guarantee: <span className="text-slate-200 font-semibold">if {wheelM} of your {betNumbers.length} numbers are drawn, you are guaranteed at least {wheelT} matching</span> in some line.</p>
-
-                      <div className="flex flex-wrap items-center gap-4">
-
-                        <label className="flex items-center gap-2 text-sm text-slate-400">
-
-                          Guarantee matches (t):
-
-                          <select value={wheelT} onChange={(e) => { setWheelT(Number(e.target.value)); setGeneratedWheel([]); setWheelMeta(null); }} className="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-100">
-
-                            {[1,2,3,4,5,6].filter(v => v <= wheelM).map(v => <option key={v} value={v}>{v}</option>)}
-
-                          </select>
-
-                        </label>
-
-                        <label className="flex items-center gap-2 text-sm text-slate-400">
-
-                          If drawn (m):
-
-                          <select value={wheelM} onChange={(e) => { setWheelM(Number(e.target.value)); setGeneratedWheel([]); setWheelMeta(null); }} className="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-100">
-
-                            {Array.from({length: betNumbers.length - 2}, (_, i) => i + 3).filter(v => v >= 3 && v <= betNumbers.length).map(v => <option key={v} value={v}>{v}</option>)}
-
-                          </select>
-
-                        </label>
-
-                      </div>
+                      <p className="text-sm text-slate-400 leading-relaxed">Set the guarantee: if{' '}
+                        <select value={wheelM} onChange={(e) => { setWheelM(Number(e.target.value)); setGeneratedWheel([]); setWheelMeta(null); }} className="bg-slate-800 border border-slate-700 rounded px-2 py-0.5 text-slate-100 font-semibold mx-0.5 align-middle">
+                          {Array.from({length: betNumbers.length - 2}, (_, i) => i + 3).filter(v => v >= 3 && v <= betNumbers.length).map(v => <option key={v} value={v}>{v}</option>)}
+                        </select>{' '}
+                        of your {betNumbers.length} numbers are drawn, you are guaranteed at least{' '}
+                        <select value={wheelT} onChange={(e) => { setWheelT(Number(e.target.value)); setGeneratedWheel([]); setWheelMeta(null); }} className="bg-slate-800 border border-slate-700 rounded px-2 py-0.5 text-slate-100 font-semibold mx-0.5 align-middle">
+                          {[1,2,3,4,5,6].filter(v => v <= wheelM).map(v => <option key={v} value={v}>{v}</option>)}
+                        </select>{' '}
+                        matching in some line.</p>
 
                     </div>
 
