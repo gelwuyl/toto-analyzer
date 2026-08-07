@@ -1888,7 +1888,7 @@ function TotoAnalyzerApp() {
 
                 <div className="flex justify-between items-start">
 
-                  <span className="text-xs text-amber-400 uppercase tracking-wider font-semibold">3-Match Overlaps</span>
+                  <span className="text-xs text-amber-400 uppercase tracking-wider font-semibold">3 Repeated Balls</span>
 
                   <span className="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-mono group-hover:bg-amber-500/30">View Log →</span>
 
@@ -1904,7 +1904,7 @@ function TotoAnalyzerApp() {
 
                 <div className="flex justify-between items-start">
 
-                  <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold">2-Match Overlaps</span>
+                  <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold">2 Repeated Balls</span>
 
                   <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">View Log →</span>
 
@@ -1918,7 +1918,7 @@ function TotoAnalyzerApp() {
 
               <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-3 shadow-lg">
 
-                <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold">4+ Rare Matches</span>
+                <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold">4+ Rare Repeats</span>
 
                 <div className="text-3xl font-extrabold text-rose-400 mt-1">{(datasetStats.counts[4] + datasetStats.counts[5] + datasetStats.counts[6]) || 0}</div>
 
@@ -1990,7 +1990,7 @@ function TotoAnalyzerApp() {
 
                       <div className="flex items-center gap-3">
 
-                        <span className={`px-2.5 py-1 rounded-md text-xs font-bold ${pair.matchCount >= 3 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-slate-800 text-slate-300'}`}>{pair.matchCount} Overlapping Ball{pair.matchCount !== 1 && 's'}</span>
+                        <span className={`px-2.5 py-1 rounded-md text-xs font-bold ${pair.matchCount >= 3 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-slate-800 text-slate-300'}`}>{pair.matchCount} Repeated Ball{pair.matchCount !== 1 && 's'}</span>
 
                         <span className="text-xs text-slate-400 font-mono">Draw #{pair.prior.drawNo} ➔ Draw #{pair.current.drawNo}</span>
 
@@ -2562,7 +2562,7 @@ function TotoAnalyzerApp() {
 
             {/* Frequency Heatmap Section */}
 
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl">
+            <div className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-6 shadow-xl">
 
               <h2 className="text-xl font-bold text-white">Hot & Cold Heatmap</h2>
 
@@ -2570,15 +2570,15 @@ function TotoAnalyzerApp() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                <div className="bg-slate-950/50 p-5 rounded-xl border border-rose-900/40 shadow-inner">
+                <div className="bg-slate-950/50 px-1 py-4 rounded-xl border border-rose-900/40 shadow-inner">
 
-                  <h3 className="text-rose-400 font-bold mb-4 flex items-center gap-2">🔥 Top 10 Hot Numbers</h3>
+                  <h3 className="text-rose-400 font-bold text-lg mb-4 flex items-center gap-2">🔥 Top 10 Hot Numbers</h3>
 
                   <div className="grid grid-cols-5 gap-2 sm:gap-3">
 
                     {frequencyStats.hot.map(n => (
 
-                      <div key={n.num} className="flex flex-col items-center gap-1.5"><span className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border shadow-md ${getBallStyle(n.num)}`}>{n.num}</span><span className="text-[10px] font-mono text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">{n.count}x</span></div>
+                      <div key={n.num} className="flex flex-col items-center gap-1.5"><span className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-base border shadow-md ${getBallStyle(n.num)}`}>{n.num}</span><span className="text-xs font-mono text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">{n.count}x</span></div>
 
                     ))}
 
@@ -2586,15 +2586,15 @@ function TotoAnalyzerApp() {
 
                 </div>
 
-                <div className="bg-slate-950/50 p-5 rounded-xl border border-blue-900/40 shadow-inner">
+                <div className="bg-slate-950/50 px-1 py-4 rounded-xl border border-blue-900/40 shadow-inner">
 
-                  <h3 className="text-blue-400 font-bold mb-4 flex items-center gap-2">🧊 Top 10 Cold Numbers</h3>
+                  <h3 className="text-blue-400 font-bold text-lg mb-4 flex items-center gap-2">🧊 Top 10 Cold Numbers</h3>
 
                   <div className="grid grid-cols-5 gap-2 sm:gap-3">
 
                     {frequencyStats.cold.map(n => (
 
-                      <div key={n.num} className="flex flex-col items-center gap-1.5"><span className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border bg-slate-800 text-slate-400 border-slate-700 shadow-md opacity-80">{n.num}</span><span className="text-[10px] font-mono text-slate-500 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">{n.count}x</span></div>
+                      <div key={n.num} className="flex flex-col items-center gap-1.5"><span className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-base border bg-slate-800 text-slate-400 border-slate-700 shadow-md opacity-80">{n.num}</span><span className="text-xs font-mono text-slate-500 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">{n.count}x</span></div>
 
                     ))}
 
@@ -2795,7 +2795,7 @@ function TotoAnalyzerApp() {
 
                       <div className="flex justify-between items-center text-sm gap-2">
 
-                        <span className="font-bold text-slate-200 truncate">{matches} Matching Ball{matches !== 1 && 's'}</span>
+                        <span className="font-bold text-slate-200 truncate">{matches} Repeated Ball{matches !== 1 && 's'}</span>
 
                         <span className="text-xs text-slate-400 font-normal whitespace-nowrap">({count} times)</span>
 
