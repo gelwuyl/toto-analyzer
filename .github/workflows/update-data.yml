@@ -3,9 +3,11 @@ name: Refresh TOTO data
 # Keeps the hosted database growing. Runs every Monday and Thursday at
 # 10pm Singapore time (14:00 UTC). Commits any new draws -> triggers deploy.
 on:
-  schedule:
-    - cron: '0 14 * * 1,4'
-    - cron: '0 15 * * 5'
+  # schedule: cron triggers disabled — SG Pools source unreliable (2026-08-07).
+  # Re-enable by uncommenting the cron lines below and pushing.
+  # schedule:
+  #   - cron: '0 14 * * 1,4'
+  #   - cron: '0 15 * * 5'
   workflow_dispatch:
 
 permissions:
