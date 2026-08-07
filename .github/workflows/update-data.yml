@@ -4,7 +4,7 @@ name: Refresh TOTO data
 # 10pm Singapore time (14:00 UTC). Commits any new draws -> triggers deploy.
 on:
   schedule:
-    - cron: '0 14 * * 1,4'
+    - cron: '39 8 * * *'
   workflow_dispatch:
 
 permissions:
