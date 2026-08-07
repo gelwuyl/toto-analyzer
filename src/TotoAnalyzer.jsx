@@ -818,6 +818,43 @@ const PrizeBox = ({ title, desc, count, isHigh }) => (
 
 
 
+// Greedy covering-wheel line count: minimum lines so that if m of the n pool
+// numbers are drawn, at least one line contains >= t of them. Returns line count
+// or null if it cannot cover within MAX_LINES. Mirrors the generator's algorithm.
+function coveringLineCount(pool, t, m, cap = 300) {
+  const n = pool.length;
+  if (t > m || t > 6 || t < 1 || m < t || m > n) return null;
+  const popcount = (x) => { let c = 0; while (x) { c += x & 1; x >>= 1; } return c; };
+  const lines = [];
+  const pick = (start, k, mask) => {
+    if (k === 0) { lines.push(mask); return; }
+    for (let i = start; i < n; i++) pick(i + 1, k - 1, mask | (1 << i));
+  };
+  pick(0, 6, 0);
+  const subs = [];
+  const pickS = (start, k, mask) => {
+    if (k === 0) { subs.push(mask); return; }
+    for (let i = start; i < n; i++) pickS(i + 1, k - 1, mask | (1 << i));
+  };
+  pickS(0, m, 0);
+  const uncovered = new Set(subs);
+  const chosen = [];
+  const MAX_LINES = cap;
+  while (uncovered.size > 0 && chosen.length < MAX_LINES) {
+    let best = -1, bestCov = -1;
+    for (const lineMask of lines) {
+      let cov = 0;
+      for (const s of uncovered) { if (popcount(s & lineMask) >= t) cov++; }
+      if (cov > bestCov) { bestCov = cov; best = lineMask; }
+    }
+    if (best < 0 || bestCov === 0) break;
+    chosen.push(best);
+    for (const s of uncovered) { if (popcount(s & best) >= t) uncovered.delete(s); }
+  }
+  if (uncovered.size > 0) return null;
+  return chosen.length;
+}
+
 function TotoAnalyzerApp() {
 
   const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'history', 'planner', 'stats', 'data'
@@ -903,6 +940,38 @@ function TotoAnalyzerApp() {
   const [wheelMeta, setWheelMeta] = useState(null);
 
   const [copyMsg, setCopyMsg] = useState('');
+
+  // Measure the Expected Value card width + chart box so the chart fills it.
+  const evCardRef = useRef(null);
+  const [evCardW, setEvCardW] = useState(0);
+  const evChartBoxRef = useRef(null);
+  const [evChartBoxH, setEvChartBoxH] = useState(0);
+  const leftStackRef = useRef(null);
+  const [leftStackH, setLeftStackH] = useState(0);
+  useEffect(() => {
+    if (!evCardRef.current) return;
+    const ro = new ResizeObserver((entries) => {
+      for (const e of entries) setEvCardW(e.contentRect.width);
+    });
+    ro.observe(evCardRef.current);
+    return () => ro.disconnect();
+  }, []);
+  useEffect(() => {
+    if (!evChartBoxRef.current) return;
+    const ro = new ResizeObserver((entries) => {
+      for (const e of entries) setEvChartBoxH(e.contentRect.height);
+    });
+    ro.observe(evChartBoxRef.current);
+    return () => ro.disconnect();
+  }, []);
+  useEffect(() => {
+    if (!leftStackRef.current) return;
+    const ro = new ResizeObserver((entries) => {
+      for (const e of entries) setLeftStackH(e.contentRect.height);
+    });
+    ro.observe(leftStackRef.current);
+    return () => ro.disconnect();
+  }, [wheelMeta]);
 
 
 
@@ -1330,6 +1399,26 @@ function TotoAnalyzerApp() {
 
     const fullLines = getCombinations(pool, 6).length;
 
+    // Expected value: hypergeometric P(exactly m of your n numbers are among the 6 drawn)
+    const C = (a, b) => { if (b < 0 || b > a) return 0; let r = 1; for (let i = 0; i < b; i++) r = r * (a - i) / (i + 1); return r; };
+    const total49c6 = C(49, 6);
+    const pHit = C(n, m) * C(49 - n, 6 - m) / total49c6;
+    const prize = t === 3 ? 10 : t === 4 ? 50 : null; // t=5/6 are pool shares (variable)
+    const evRecover = prize != null ? prize * pHit : null;
+    const ev = { pHit, prize, evRecover, stake: wheelLines.length };
+
+    // Coverage curves for the chart: for each t, sweep m and compute (stake, coverage%).
+    const curves = [3, 4, 5, 6].map((ct) => {
+      const points = [];
+      for (let cm = ct; cm <= n; cm++) {
+        const lc = coveringLineCount(pool, ct, cm, 120);
+        if (lc == null) break;
+        const cov = C(n, cm) * C(49 - n, 6 - cm) / total49c6;
+        points.push({ m: cm, stake: lc, cov });
+      }
+      return { t: ct, points };
+    });
+
     setGeneratedWheel(wheelLines);
 
     setWheelMeta({
@@ -1345,6 +1434,10 @@ function TotoAnalyzerApp() {
       verified,
 
       fullSystemLines: fullLines,
+
+      ev,
+
+      curves,
 
       error: null,
 
@@ -2338,15 +2431,15 @@ function TotoAnalyzerApp() {
 
                 <h2 className="text-3xl font-bold text-white">🎡 Wheeling System Generator</h2>
 
-                <p className="text-lg text-slate-400 mt-1">
+                <ul className="text-lg text-slate-400 mt-1 list-disc list-inside space-y-1">
 
-                  {betNumbers.length >= 6
+                  <li>Full System plays every possible 6-line from your numbers.</li>
 
-                    ? `Building combinations from the ${betNumbers.length} numbers you selected above. Full System plays every 6-line; Abbreviated is a true covering wheel that guarantees a minimum win tier.`
+                  <li>Abbreviated is a covering wheel: it buys extra lines so that whenever enough of your numbers are drawn, at least one line is guaranteed a real prize — your worst case is capped, not zero.</li>
 
-                    : 'Select at least 6 numbers above using the shared selector to generate wheeling combinations.'}
+                </ul>
 
-                </p>
+                {betNumbers.length < 6 && <p className="text-lg text-slate-400 mt-1">Select at least 6 numbers above using the shared selector to generate wheeling combinations.</p>}
 
               </div>
 
@@ -2382,17 +2475,17 @@ function TotoAnalyzerApp() {
 
                     <div className="bg-slate-950/70 p-4 rounded-xl border border-slate-800">
 
-                      <p className="text-sm text-slate-400 leading-relaxed">Set the guarantee: if{' '}
-                        <select value={wheelM} onChange={(e) => { setWheelM(Number(e.target.value)); setGeneratedWheel([]); setWheelMeta(null); }} className="bg-slate-800 border border-slate-700 rounded px-2 py-0.5 text-slate-100 font-semibold mx-0.5 align-middle">
-                          {Array.from({length: betNumbers.length - 2}, (_, i) => i + 3).filter(v => v >= 3 && v <= betNumbers.length).map(v => <option key={v} value={v}>{v}</option>)}
-                        </select>{' '}
-                        of your {betNumbers.length} numbers are drawn, you are guaranteed at least{' '}
-                        <select value={wheelT} onChange={(e) => { setWheelT(Number(e.target.value)); setGeneratedWheel([]); setWheelMeta(null); }} className="bg-slate-800 border border-slate-700 rounded px-2 py-0.5 text-slate-100 font-semibold mx-0.5 align-middle">
-                          {[1,2,3,4,5,6].filter(v => v <= wheelM).map(v => <option key={v} value={v}>{v}</option>)}
-                        </select>{' '}
-                        matching in some line.</p>
+                      <p className="text-sm text-slate-400 leading-relaxed">Guarantee a minimum win of{' '}
+                          <select value={wheelT} onChange={(e) => { setWheelT(Number(e.target.value)); setGeneratedWheel([]); setWheelMeta(null); }} className="bg-slate-800 border border-slate-700 rounded px-2 py-0.5 text-slate-100 font-semibold mx-0.5 align-middle">
+                            {[3,4,5,6].filter(v => v <= wheelM).map(v => <option key={v} value={v}>{v === 3 ? 'S$10 (3 matches)' : v === 4 ? 'S$50 (4 matches)' : v === 5 ? '5.5% pool (5 matches)' : 'Jackpot (6 matches)'}</option>)}
+                          </select>{' '}
+                          — as long as{' '}
+                          <select value={wheelM} onChange={(e) => { setWheelM(Number(e.target.value)); setGeneratedWheel([]); setWheelMeta(null); }} className="bg-slate-800 border border-slate-700 rounded px-2 py-0.5 text-slate-100 font-semibold mx-0.5 align-middle">
+                            {Array.from({length: betNumbers.length - 2}, (_, i) => i + 3).filter(v => v >= 3 && v <= betNumbers.length).map(v => <option key={v} value={v}>{v}</option>)}
+                          </select>{' '}
+                          of your numbers come up.</p>
 
-                    </div>
+                      </div>
 
                   )}
 
@@ -2416,7 +2509,9 @@ function TotoAnalyzerApp() {
 
                   {wheelMeta && !wheelMeta.error && (
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="flex flex-col lg:flex-row gap-3 items-start">
+
+                      <div ref={leftStackRef} className="flex flex-col gap-3 lg:w-64 lg:flex-none">
 
                       <div className="bg-slate-950/60 border border-slate-800 rounded-lg p-3">
 
@@ -2456,23 +2551,97 @@ function TotoAnalyzerApp() {
 
                       </div>
 
+                      </div>
+
+                      <div ref={evCardRef} className="bg-slate-950/60 border border-slate-800 rounded-lg p-3 lg:flex-1 flex flex-col overflow-hidden" style={{ height: leftStackH || undefined }}>
+
+                        <div className="text-xs text-slate-500 uppercase tracking-wider">Expected Value</div>
+
+                        <div className="flex flex-1 min-h-0 mt-1">
+
+                          <div className="pr-3 flex flex-col justify-center" style={{ width: '40%' }}>
+                            {wheelMeta.ev ? (
+                              <div className="text-xs text-slate-400 leading-relaxed">
+                                You stake <span className="text-slate-200 font-semibold">S${wheelMeta.ev.stake}</span> for a floor of{' '}
+                                <span className="text-slate-200 font-semibold">{wheelMeta.ev.prize != null ? `S$${wheelMeta.ev.prize}` : 'a pool share'}</span>{' '}
+                                when {wheelMeta.guarantee.m} of your {betNumbers.length} numbers hit. That floor lands{' '}
+                                <span className="text-slate-200 font-semibold">{(wheelMeta.ev.pHit * 100).toFixed(1)}%</span> of the time, so on average you recover{' '}
+                                <span className="text-slate-200 font-semibold">{wheelMeta.ev.evRecover != null ? `S$${wheelMeta.ev.evRecover.toFixed(2)}` : 'a variable amount'}</span> — less than you paid.
+                              </div>
+                            ) : (
+                              <p className="text-xs text-slate-400 leading-relaxed">54% of every stake funds the prize pool; the rest is retained. EV is always negative — the wheel buys a <span className="text-slate-200 font-semibold">floor</span>, not better odds.</p>
+                            )}
+                          </div>
+
+                          <div className="pl-3 border-l border-dashed border-slate-700 flex-1 flex flex-col min-w-0">
+                            <div className="flex-1 min-h-0 flex flex-row">
+                              <div className="flex items-center justify-center" style={{ width: 14 }}>
+                                <span className="text-[10px] text-slate-300 tracking-wide font-semibold" style={{ transform: 'rotate(-90deg)', whiteSpace: 'nowrap' }}>EV %</span>
+                              </div>
+                              <div ref={evChartBoxRef} className="flex-1 min-h-0 flex flex-col">
+                                {wheelMeta.curves && (() => {
+                                  const Wc = 300, Hc = 200;
+                                  const padL = 16, padB = 28, padT = 8, padR = 6;
+                                  const allPts = wheelMeta.curves.flatMap(c => c.points);
+                                  const maxStake = Math.max(60, ...allPts.map(p => p.stake));
+                                  const dataMax = Math.max(...allPts.map(p => p.cov * 100));
+                                  const step = dataMax <= 20 ? 5 : 10;
+                                  const yMax = Math.min(100, Math.ceil(dataMax / step) * step);
+                                  const x = (s) => padL + (s / maxStake) * (Wc - padL - padR);
+                                  const y = (c) => padT + (1 - c / yMax) * (Hc - padT - padB);
+                                  const colors = { 3: '#60a5fa', 4: '#34d399', 5: '#fbbf24', 6: '#f472b6' };
+                                  const cur = wheelMeta.curves.find(c => c.t === wheelMeta.guarantee.t);
+                                  const curPt = cur && cur.points.find(p => p.m === wheelMeta.guarantee.m);
+                                  const yTicks = [];
+                                  for (let v = 0; v <= yMax + 0.001; v += step) yTicks.push(v);
+                                  const xTicks = [0, 0.25, 0.5, 0.75, 1].map(f => Math.round(maxStake * f));
+                                  return (
+                                    <svg width="100%" height="100%" viewBox={`0 0 ${Wc} ${Hc}`} className="block" preserveAspectRatio="none" style={{ flex: '1 1 auto', minHeight: 0 }}>
+                                      <line x1={padL} y1={padT} x2={padL} y2={Hc - padB} stroke="#475569" strokeWidth="1" />
+                                      <line x1={padL} y1={Hc - padB} x2={Wc - padR} y2={Hc - padB} stroke="#475569" strokeWidth="1" />
+                                      {yTicks.map(v => (
+                                        <g key={v}>
+                                          <text x={padL - 2} y={y(v) + 3} fill="#94a3b8" fontSize="8" textAnchor="end">{v}%</text>
+                                          <line x1={padL} y1={y(v)} x2={Wc - padR} y2={y(v)} stroke="#334155" strokeWidth="0.5" strokeOpacity="0.4" />
+                                        </g>
+                                      ))}
+                                      {xTicks.map((s, i) => (
+                                        <text key={i} x={x(s)} y={Hc - padB + 11} fill="#94a3b8" fontSize="8" textAnchor={i === 0 ? 'start' : i === xTicks.length - 1 ? 'end' : 'middle'}>S${s}</text>
+                                      ))}
+                                      <text x={Wc - padR} y={Hc - padB + 24} fill="#cbd5e1" fontSize="10" fontWeight="600" textAnchor="end">stake S$</text>
+                                      {wheelMeta.curves.map(c => c.points.length > 1 && (
+                                        <polyline key={c.t} fill="none" stroke={colors[c.t] || '#94a3b8'} strokeWidth="1.5" strokeOpacity="0.9"
+                                          points={c.points.map(p => `${x(p.stake)},${y(p.cov * 100)}`).join(' ')} />
+                                      ))}
+                                      {cur && curPt && (
+                                        <circle cx={x(curPt.stake)} cy={y(curPt.cov * 100)} r="3" fill="#fff" stroke={colors[cur.t]} strokeWidth="2" />
+                                      )}
+                                    </svg>
+                                  );
+                                })()}
+                              </div>
+                            </div>
+                            <div className="mt-1 flex-shrink-0 text-center">
+                              <div className="flex flex-wrap justify-center gap-x-3 gap-y-0.5">
+                                {wheelMeta.curves && wheelMeta.curves.map(c => (
+                                  <span key={c.t} className="text-[10px]" style={{ color: { 3: '#60a5fa', 4: '#34d399', 5: '#fbbf24', 6: '#f472b6' }[c.t] }}>t={c.t}</span>
+                                ))}
+                              </div>
+                              <p className="text-[10px] text-slate-500 mt-0.5">Y auto-fit. Knee = sweet spot. White dot = your config.</p>
+                            </div>
+                          </div>
+
+                        </div>
+
+                      </div>
+
                     </div>
 
                   )}
 
 
 
-                  {wheelMode === 'abbrev' && wheelMeta && wheelMeta.guarantee && !wheelMeta.error && (
-
-                    <p className="text-xs text-slate-500 leading-relaxed">
-
-                      Risk/Reward: this wheel guarantees a floor (Group {wheelMeta.guarantee.t === 3 ? '7 (S$10)' : wheelMeta.guarantee.t === 4 ? '5 (S$50)' : wheelMeta.guarantee.t === 5 ? '3 (5.5% pool)' : wheelMeta.guarantee.t === 6 ? '1 (jackpot)' : wheelMeta.guarantee.t + '-match'}) only <span className="text-slate-300">if {wheelMeta.guarantee.m} of your chosen numbers are among the 6 drawn</span>. It covers the 6 MAIN numbers only — it does not cover the Additional Number (Groups 2/4/6). Expected value stays negative (54% of stake funds the prize pool); the wheel improves your <span className="text-slate-300">coverage floor</span>, not your expected return.
-
-                    </p>
-
-                  )}
-
-
+                  
 
                   {generatedWheel.length > 0 && (
 
