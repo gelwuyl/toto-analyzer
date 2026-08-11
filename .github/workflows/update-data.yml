@@ -1,17 +1,23 @@
 name: Refresh TOTO data
 
-# Keeps the hosted database growing. Runs every Monday and Thursday at
-# 10pm Singapore time (14:00 UTC). Commits any new draws -> triggers deploy.
+# Keeps the hosted database growing.
+# Schedule (Singapore time = UTC+8):
+#   - 22:00 SGT every Monday (14:00 UTC)   -> regular draw day
+#   - 22:00 SGT every Thursday (14:00 UTC) -> regular draw day
+#   - 23:30 SGT every Friday (15:30 UTC)   -> FALLBACK: if a Thursday draw
+#       is delayed to Friday (public holidays, CNY, etc.), this run still
+#       picks up the new draw so the DB never stalls a week.
+# Also runnable manually via workflow_dispatch.
 on:
-  # schedule: cron triggers disabled — SG Pools source unreliable (2026-08-07).
-  # Re-enable by uncommenting the cron lines below and pushing.
-  # schedule:
-  #   - cron: '0 14 * * 1,4'
-  #   - cron: '0 15 * * 5'
+  schedule:
+    - cron: '0 14 * * 1'   # Mon 22:00 SGT
+    - cron: '0 14 * * 4'   # Thu 22:00 SGT
+    - cron: '30 15 * * 5'  # Fri 23:30 SGT  (fallback for delayed draws)
   workflow_dispatch:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   refresh:
@@ -32,3 +38,29 @@ jobs:
           git add public/toto_official.csv public/toto_official.json
           git diff --cached --quiet || git commit -m "chore: refresh TOTO draws"
           git push
+
+      # Guard against a stale live deployment: if the committed CSV ever
+      # lags what's actually deployed on Pages, force a fresh rebuild so the
+      # live site can never serve a build missing the newest draws.
+      - name: Force fresh Pages deploy (anti-stale)
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: runs } = await github.rest.actions.listWorkflowRuns({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'deploy.yml',
+              per_page: 1,
+            });
+            const last = runs.workflow_runs[0];
+            if (last && last.status === 'completed') {
+              console.log('Re-running Deploy to GitHub Pages (run ' + last.id + ') to refresh the live build.');
+              await github.rest.actions.reRunWorkflow({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: last.id,
+              });
+            } else {
+              console.log('No completed deploy run found; skipping re-run.');
+            }
