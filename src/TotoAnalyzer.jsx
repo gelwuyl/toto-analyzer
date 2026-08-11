@@ -1929,11 +1929,11 @@ function TotoAnalyzerApp() {
 
         {/* Tab Navigation: dropdown on mobile, tab row on >=sm */}
         {/* Mobile dropdown */}
-        <div className="flex sm:hidden items-center gap-2 pb-0">
-          <select
-            value={activeTab}
-            onChange={(e) => setActiveTab(e.target.value)}
-            className="flex-1 text-center appearance-none bg-slate-900/80 border border-slate-700 rounded-xl px-4 py-3 text-base font-semibold text-slate-100 focus:outline-none focus:border-blue-500"
+        <div className="flex sm:hidden items-center gap-2 pb-0 w-full overflow-hidden">
+        <select
+          value={activeTab}
+          onChange={(e) => setActiveTab(e.target.value)}
+          className="flex-1 min-w-0 w-full max-w-full text-center appearance-none bg-slate-900/80 border border-slate-700 rounded-xl px-4 py-3 text-base font-semibold text-slate-100 focus:outline-none focus:border-blue-500"
           >
             <option value="overview">📊 Analytics & Stats</option>
             <option value="history">📜 Past Records{datasetStats.total > 0 ? ` (${datasetStats.total})` : ''}</option>
