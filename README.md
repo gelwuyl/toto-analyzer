@@ -1,6 +1,6 @@
-# Singapore Pools TOTO Analyzer (static site)
+# TOTO-RO
 
-React app deployed to GitHub Pages. Ships a real 314-draw TOTO history embedded
+Singapore Pools TOTO Analyzer React app deployed to GitHub Pages. Ships a real 314-draw TOTO history embedded
 in the build, then auto-refreshes from the hosted `toto_official.csv` on load.
 A scheduled GitHub Action re-scrapes the latest draws and redeploys — no server,
 no container, no cost (GitHub Actions free tier).
